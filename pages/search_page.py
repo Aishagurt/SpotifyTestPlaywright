@@ -9,11 +9,11 @@ class SearchPage:
 
     def __init__(self, page: Page):
         self.page = page
+        self.search_input = page.locator("form[role='search'] input")
 
     def get_song_text_by_name(self, search_text: str, song_name: str):
-        search_input = self.page.locator("form[role='search'] input")
-        search_input.fill(search_text)
-        search_input.press("Enter")
+        self.search_input.fill(search_text)
+        self.search_input.press("Enter")
 
         search_track_button = self._get_search_track_button(search_text)
         search_track_button.click()

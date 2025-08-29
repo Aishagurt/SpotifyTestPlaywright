@@ -7,11 +7,26 @@ trigger:
 - master
 pool: 12345
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages: 
+  - stage: Create
+    displayName: 'Creating file'
+    jobs:
+      - job: CreateJob
+        steps:
+        - script: |
+            echo creating file
+            cat test.txt
+          displayName: Install deps
+
+  - stage: Write
+    displayName: 'Writing in file'
+    jobs:
+      - job: WriteJob
+        steps:
+        - script: |
+            echo writing in file
+            echo "This is new content." > test.txt
+          displayName: Install deps
+          
+

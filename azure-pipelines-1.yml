@@ -1,32 +1,51 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# azure-pipelines.yml — Windows, two stages, pass file via artifacts
 
 trigger:
-- master
-pool: 12345
+- main
+
+pool:
+  name: 12345
+
+stages:
+
+- stage: Create
+  displayName: 'Creating file'
+  jobs:
+  - job: CreateJob
+    steps:
+    - checkout: self
+
+    - pwsh: |
+        Write-Host "creating file"
+        $path = "$(Build.SourcesDirectory)\test.txt"
+        "Hello from Create stage" | Set-Content -Path $path -Encoding utf8
+        Get-Content $path
+      displayName: Create test.txt
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish test.txt as pipeline artifact
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\test.txt'  
+        artifact: 'test-file'
+        publishLocation: 'pipeline'
 
 
-stages: 
-  - stage: Create
-    displayName: 'Creating file'
-    jobs:
-      - job: CreateJob
-        steps:
-        - script: |
-            echo creating file
-            cat test.txt
-          displayName: Install deps
+- stage: Write
+  displayName: 'Writing in file'
+  dependsOn: Create
+  jobs:
+  - job: WriteJob
+    steps:
+    - checkout: none
 
-  - stage: Write
-    displayName: 'Writing in file'
-    jobs:
-      - job: WriteJob
-        steps:
-        - script: |
-            echo writing in file
-            echo "This is new content." > test.txt
-          displayName: Install deps
-          
+    - download: current
+      artifact: 'test-file' 
 
+    - pwsh: |
+        $path = "$(Pipeline.Workspace)\test-file\test.txt"
+        Write-Host "Before:"
+        Get-Content $path
+        "This is new content." | Set-Content -Path $path -Encoding utf8
+        Write-Host "`nAfter:"
+        Get-Content $path
+      displayName: Overwrite content
